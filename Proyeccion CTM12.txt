@@ -1,0 +1,104 @@
+#Proceso de Proyección de datos espaciales al ctm12
+
+# En referencia a la Resolución 471 de 2020 
+# ver la url https://igac.gov.co/sites/igac.gov.co/files/normograma/resolucion_471_de_2020.pdf
+# Fecha de consulta 28 de junio del 2020.
+# En el documento se considera el punto de origen 
+#  Latitud  en coordendas geograficas  (𝜑) 4° 
+# Longitud en coordendades geograficas  (𝜆) 73°
+
+
+#Convertimos las coordendades en grados decimales
+lat <- (4+00/60+00/3600)
+lat 
+lon <- (-73+00/60+00/3600)
+lon 
+
+# unidades en metros
+# Los parametros de falso este y falso norte
+# Falso este = 5000000
+# Falso norte =2000000
+# Factor de escala del meridiano central 0.9992
+
+#Para poder realizar el profeco de transformacion  utilizaremos las liguentes librerias.
+#Instalamos
+
+library(pacman)
+
+require(pacman)
+
+pacman::p_load(raster, rgdal, rgeos, tidyverse, gtools)
+rm(list = ls())
+
+# Insertamos dato de tipo shape
+
+### Shapefiles
+setwd("E:/Shape Colombia/Santander/.....")
+list.files(path=".")
+
+munic<- readOGR('Municipios.shp', layer='Municipios')
+
+crs(munic)
+
+
+plot(munic,axes = TRUE, main = 'Municipios del departamento de  Santander')
+
+# Observamos que los datos se encuentran en  coordendas geograficas.
+
+#Intentamos  proyectar proyectar en el sistema SR-ORG:9028 (Bogota origen central)
+
+# https://spatialreference.org/ref/sr-org/9028/
+
+# +proj=tmerc +lat_0=4.596200416666666 +lon_0=-74.07750791666666 +k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs 
+
+magna <- '+proj=tmerc +lat_0=4.596200416666666 +lon_0=-74.07750791666666 +k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+magnaB <- spTransform(x = munic, CRSobj = magna)
+
+plot(magnaB, main = 'MAGNA- Bogotá Origen Central',axes = TRUE)
+
+# Entonces los datos de referencia de MAGNA - Bogotá Origen Central ES :
+# proj=tmerc, se mantiene, 
+# lat_0= 4.596200416666666
+# lon_0= -74.07750791666666
+# k=1
+# x_0=1000000
+# y_0=1000000
+#ellps=GRS80, 
+#towgs84=0,0,0,0,0,0,0 ,
+#units=m +no_defs, s
+
+# Para hacer el proceso de tranformacion a CTM12, utilizamos los datos  de CTM12, se debe tener en cuenta: 
+https://igac.gov.co/sites/igac.gov.co/files/normograma/resolucion_471_de_2020.pdf 
+
+# proj=tmerc, se mantiene, 
+# lat_0= 4.0
+# lon_0= -73.0
+# k=0.9992
+# x_0=5000000
+# y_0=2000000
+#ellps=GRS80, se mantiene
+#towgs84=0,0,0,0,0,0,0 seconserva,
+#units=m +no_defs, se conserva
+
+donde se define el sistema de referencia CTM12.
+
+ctm <- '+proj=tmerc +lat_0=4.0 +lon_0=-73.0 +k=0.9992 +x_0=5000000 +y_0=2000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+ctm12 <- spTransform(x = munic, CRSobj = ctm)
+
+
+crs(ctm12)
+
+plot(ctm12, main = 'CTM12-Municipios del departamento de Santander',axes = TRUE)
+
+# par exportar datos shape 
+
+C:/Users/Usuario/Desktop/Nueva carpeta
+
+
+ shapefile(ctm12,'C:/Users/Usuario/Desktop/Nueva carpeta/ctm12_muni.shp')
+
+#Referencia Bibliográfica
+
+
+
+
